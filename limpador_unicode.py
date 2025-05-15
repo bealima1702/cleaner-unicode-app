@@ -50,9 +50,7 @@ unicode_set = set(invisible_chars.keys())
 
 st.title("🧹 Limpador de Caracteres Invisíveis (Unicode)")
 
-raw_text = st.text_area("Cole seu texto aqui:", height=250)
-
-    texto = raw_text
+texto = st.text_area("Cole seu texto aqui:", height=250)
 
 if st.button("Limpar texto"):
     texto_limpo = ""
@@ -63,7 +61,7 @@ if st.button("Limpar texto"):
         if code in unicode_set:
             removidos.append(code)
             if code == 0x0020:
-                texto_limpo += " "  # substitui U+0020 por espaço explícito
+                texto_limpo += " "  # substitui explicitamente U+0020
         else:
             texto_limpo += c
 
@@ -95,4 +93,4 @@ if st.button("Limpar texto"):
     )
 
 st.markdown("---")
-st.caption("Limpador Synap Digital – agora com substituição explícita de espaços invisíveis.")
+st.caption("Limpador Synap Digital – com remoção precisa e sem corromper acentuação.")
