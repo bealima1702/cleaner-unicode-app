@@ -40,7 +40,6 @@ invisible_chars = {
     0xFFFB: "Interlinear Annotation Terminator (U+FFFB)"
 }
 
-# Adiciona o intervalo de FE00 a FE0F, caso ainda não esteja incluso
 for code in range(0xFE00, 0xFE10):
     if code not in invisible_chars:
         invisible_chars[code] = f"Variation Selector (U+{code:04X})"
@@ -49,9 +48,12 @@ unicode_set = set(invisible_chars.keys())
 
 st.title("🧹 Limpador de Caracteres Invisíveis (Unicode)")
 
-texto = st.text_area("Cole seu texto aqui:", height=250)  # corrigido: usa direto
+texto = st.text_area("Cole seu texto aqui:", height=250)
 
 if st.button("Limpar texto"):
+    # Garantir que todos os Soft Hyphens sejam removidos mesmo que escapem no loop
+    texto = texto.replace(chr(0x00AD), "")
+
     texto_limpo = ""
     removidos = []
 
@@ -90,4 +92,4 @@ if st.button("Limpar texto"):
     )
 
 st.markdown("---")
-st.caption("Limpador Synap Digital – com base na mesma biblioteca completa do verificador.")
+st.caption("Limpador Synap Digital – com remoção forçada de Soft Hyphen (U+00AD).")
