@@ -64,14 +64,16 @@ if st.button("Limpar texto"):
         code = ord(c)
         if code in unicode_set:
             removidos.append(code)
+            if code == 0x0020:
+                texto_limpo += " "  # substitui U+0020 por espaço explícito
         else:
             texto_limpo += c
 
-    st.success(f"{len(removidos)} caractere(s) invisível(is) foram removidos.")
+    st.success(f"{len(removidos)} caractere(s) invisível(is) foram removidos ou substituídos.")
 
     if removidos:
         contagem = Counter(removidos)
-        st.markdown("### 📊 Códigos removidos")
+        st.markdown("### 📊 Códigos removidos/substituídos")
         for code, count in contagem.items():
             label = f"U+{code:04X}"
             nome = invisible_chars[code]
@@ -95,4 +97,4 @@ if st.button("Limpar texto"):
     )
 
 st.markdown("---")
-st.caption("Limpador Synap Digital – com base na mesma biblioteca completa do verificador.")
+st.caption("Limpador Synap Digital – agora com substituição explícita de espaços invisíveis.")
