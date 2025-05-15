@@ -49,11 +49,7 @@ unicode_set = set(invisible_chars.keys())
 
 st.title("🧹 Limpador de Caracteres Invisíveis (Unicode)")
 
-raw_text = st.text_area("Cole seu texto aqui:", height=250)
-try:
-    texto = raw_text.encode().decode("unicode_escape")
-except:
-    texto = raw_text
+texto = st.text_area("Cole seu texto aqui:", height=250)  # corrigido: usa direto
 
 if st.button("Limpar texto"):
     texto_limpo = ""
