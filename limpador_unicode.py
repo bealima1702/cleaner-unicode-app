@@ -1,4 +1,5 @@
 import streamlit as st
+import unicodedata
 from collections import Counter
 
 # Lista completa dos caracteres invisíveis a serem removidos
@@ -13,32 +14,29 @@ invisible_chars = {
 invisible_set = set(chr(code) for code in invisible_chars)
 
 def limpar_unicode_total(texto):
+    texto_normalizado = unicodedata.normalize("NFKC", texto)
     texto_limpo = ""
     removidos = []
-    for c in texto:
-        if c in invisible_set:
+    for c in texto_normalizado:
+        if ord(c) in invisible_chars:
             removidos.append(ord(c))
         else:
             texto_limpo += c
     return texto_limpo, removidos
 
-def validar_ascii(texto):
-    return all(32 <= ord(c) <= 126 or c == "\n" for c in texto)
+def detectar_residuos(texto):
+    return [f"U+{ord(c):04X}" for c in texto if ord(c) in invisible_chars]
 
-def detectar_outros(texto):
-    return [f"U+{ord(c):04X}" for c in texto if ord(c) < 32 or ord(c) > 126 and c != "\n"]
-
-st.set_page_config(page_title="Limpador Total de Invisíveis", layout="centered")
+st.set_page_config(page_title="Limpador Total Robusto", layout="centered")
 st.title("🧹 Limpador de Caracteres Invisíveis (Unicode)")
 
 texto = st.text_area("Cole seu texto aqui:", height=300)
 
 if st.button("Limpar texto"):
     texto_limpo, removidos = limpar_unicode_total(texto)
-
     st.success(f"{len(removidos)} caractere(s) invisível(is) foram removidos.")
 
-    st.markdown("### ✨ Texto limpo (sem nenhum invisível da lista)")
+    st.markdown("### ✨ Texto limpo")
     st.code(texto_limpo, language="markdown")
 
     if removidos:
@@ -47,19 +45,19 @@ if st.button("Limpar texto"):
         for cod, count in contagem.items():
             st.markdown(f"- `U+{cod:04X}`: {count}×")
 
-    if not validar_ascii(texto_limpo):
-        suspeitos = detectar_outros(texto_limpo)
-        st.warning("⚠️ Ainda restam caracteres fora da faixa ASCII:")
-        for s in Counter(suspeitos).items():
-            st.markdown(f"- `{s[0]}`: {s[1]}x")
+    residuos = detectar_residuos(texto_limpo)
+    if residuos:
+        st.error("⚠️ Ainda há invisíveis residuais no texto final:")
+        for cod, n in Counter(residuos).items():
+            st.markdown(f"- `\{cod}`: {n}×")
     else:
-        st.info("✅ O texto final contém apenas ASCII padrão + \n.")
+        st.info("✅ O texto final está 100% limpo de invisíveis.")
 
     st.markdown("### 🔍 Destaques no original")
     destaque = ""
     for c in texto:
         code = ord(c)
-        if c in invisible_set:
+        if code in invisible_chars:
             destaque += f'<span style="background-color:#FFCDD2;padding:2px;margin:1px;border-radius:4px;">U+{code:04X}</span>'
         else:
             safe = c.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -70,4 +68,4 @@ if st.button("Limpar texto"):
     )
 
 st.markdown("---")
-st.caption("Ferramenta Synap Digital para remoção total de caracteres invisíveis Unicode.")
+st.caption("Ferramenta Synap Digital para remoção total de caracteres invisíveis, com verificação e normalização Unicode.")
