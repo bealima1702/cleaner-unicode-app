@@ -1,72 +1,70 @@
 import streamlit as st
 
-# Lista de caracteres invisíveis a substituir por espaço
-espacos_unicode = {
+# Lista completa dos caracteres invisíveis
+unicode_invisiveis = [
     0x0020, 0x00A0, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004,
     0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202F,
-    0x205F, 0x3000
+    0x205F, 0x3000, 0x200B, 0x200C, 0x200D, 0x2060, 0x200E,
+    0x200F, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x00AD,
+    0x034F, 0x061C, 0xFE0E, 0xFE0F, 0xFEFF, 0xFFF9, 0xFFFA,
+    0xFFFB
+] + list(range(0xFE00, 0xFE10))  # FE00–FE0F
+
+# Separar por função
+espacos_invisiveis = {
+    0x0020, 0x00A0, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004,
+    0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200A,
+    0x202F, 0x205F, 0x3000
 }
+quebras_invisiveis = {0x000A, 0x2028, 0x2029}
+demais_remover = set(unicode_invisiveis) - espacos_invisiveis - quebras_invisiveis
 
-# Lista de caracteres invisíveis a remover totalmente
-invisiveis_a_remover = {
-    0x200B, 0x200C, 0x200D, 0x2060, 0x200E, 0x200F, 0x202A, 0x202B,
-    0x202C, 0x202D, 0x202E, 0x00AD, 0x034F, 0x061C, 0xFE0E, 0xFE0F,
-    0xFEFF, 0xFFF9, 0xFFFA, 0xFFFB
-} | set(range(0xFE00, 0xFE10))
+espacos_set = set(chr(c) for c in espacos_invisiveis)
+quebras_set = set(chr(c) for c in quebras_invisiveis)
+remover_set = set(chr(c) for c in demais_remover)
 
-# Quebras invisíveis que devem virar \n
-quebras_unicode = {
-    0x000A,  # LF
-    0x000D,  # CR
-    0x2028,  # Line Separator
-    0x2029   # Paragraph Separator
-}
-
-# Conjuntos de decisão
-substituir_por_espaco = set(chr(c) for c in espacos_unicode)
-remover = set(chr(c) for c in invisiveis_a_remover)
-substituir_por_queebra = set(chr(c) for c in quebras_unicode)
-
-def limpar_texto(texto):
-    resultado = ""
+def limpar(texto):
+    texto_limpo = ""
     removidos = []
     for c in texto:
-        if c in substituir_por_espaco:
-            resultado += " "
-        elif c in substituir_por_queebra:
-            resultado += "\n"
-        elif c in remover:
-            removidos.append(f"U+{ord(c):04X}")
+        code = ord(c)
+        if c in espacos_set:
+            texto_limpo += " "
+            removidos.append(f"U+{code:04X}")
+        elif c in quebras_set:
+            texto_limpo += "\n"
+            removidos.append(f"U+{code:04X}")
+        elif c in remover_set:
+            removidos.append(f"U+{code:04X}")
         else:
-            resultado += c
-    return resultado, removidos
+            texto_limpo += c
+    return texto_limpo, removidos
 
-st.set_page_config(page_title="Limpador Final Unicode", layout="centered")
+# Interface
+st.set_page_config(page_title="Limpador de Caracteres Invisíveis", layout="centered")
 st.title("🧹 Limpador de Caracteres Invisíveis (Unicode)")
-
 texto = st.text_area("Cole seu texto aqui:", height=300)
 
 if st.button("Limpar texto"):
-    texto_limpo, removidos = limpar_texto(texto)
+    texto_limpo, removidos = limpar(texto)
 
     st.success(f"{len(removidos)} caractere(s) invisível(is) foram removidos ou convertidos.")
 
-    st.markdown("### ✨ Texto limpo (com espaços e quebras normalizadas)")
+    st.markdown("### ✨ Texto limpo (com espaços e parágrafos preservados)")
     st.code(texto_limpo, language="markdown")
 
     if removidos:
-        st.markdown("### 🔍 Códigos removidos")
-        contagem = {}
-        for cod in removidos:
-            contagem[cod] = contagem.get(cod, 0) + 1
+        from collections import Counter
+        contagem = Counter(removidos)
+        st.markdown("### 📊 Códigos removidos ou convertidos")
         for cod, n in contagem.items():
-            st.markdown(f"- `{cod}`: {n}x")
+            st.markdown(f"- `{cod}`: {n}×")
 
-    st.markdown("### 🔎 Visualização com destaques")
+    st.markdown("### 🔍 Visualização com destaques")
     destaque = ""
     for c in texto:
         code = ord(c)
-        if c in remover or c in substituir_por_espaco or c in substituir_por_queebra:
+        if c in remover_set or c in espacos_set or c in quebras_set:
             destaque += f'<span style="background-color:#FFCDD2;padding:2px;margin:1px;border-radius:4px;">U+{code:04X}</span>'
         else:
             safe = c.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -77,4 +75,4 @@ if st.button("Limpar texto"):
     )
 
 st.markdown("---")
-st.caption("Ferramenta Synap Digital para limpeza e normalização rigorosa de espaços e parágrafos.")
+st.caption("Ferramenta Synap Digital para limpeza precisa de caracteres invisíveis sem comprometer espaçamentos ou parágrafos.")
