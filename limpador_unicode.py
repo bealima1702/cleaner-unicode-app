@@ -1,79 +1,55 @@
 import streamlit as st
 
-# Dicionário de caracteres invisíveis (Unicode + nomes)
-invisible_map = {
-    0x0020: "Space",
-    0x00A0: "Non-breaking Space",
-    0x2000: "En Quad",
-    0x2001: "Em Quad",
-    0x2002: "En Space",
-    0x2003: "Em Space",
-    0x2004: "Three-Per-Em Space",
-    0x2005: "Four-Per-Em Space",
-    0x2006: "Six-Per-Em Space",
-    0x2007: "Figure Space",
-    0x2008: "Punctuation Space",
-    0x2009: "Thin Space",
-    0x200A: "Hair Space",
-    0x202F: "Narrow No-Break Space",
-    0x205F: "Medium Mathematical Space",
-    0x3000: "Ideographic Space",
-    0x200B: "Zero Width Space",
-    0x200C: "Zero Width Non-Joiner",
-    0x200D: "Zero Width Joiner",
-    0x2060: "Word Joiner",
-    0x200E: "Left-to-Right Mark",
-    0x200F: "Right-to-Left Mark",
-    0x202A: "Left-to-Right Embedding",
-    0x202B: "Right-to-Left Embedding",
-    0x202C: "Pop Directional Formatting",
-    0x202D: "Left-to-Right Override",
-    0x202E: "Right-to-Left Override",
-    0x00AD: "Soft Hyphen",
-    0x034F: "Combining Grapheme Joiner",
-    0x061C: "Arabic Letter Mark",
-    0xFE0E: "Variation Selector-15",
-    0xFE0F: "Variation Selector-16",
-    0xFEFF: "Byte Order Mark",
-    0xFFF9: "Interlinear Annotation Anchor",
-    0xFFFA: "Interlinear Annotation Separator",
-    0xFFFB: "Interlinear Annotation Terminator"
-}
-for code in range(0xFE00, 0xFE10):
-    invisible_map.setdefault(code, f"Variation Selector (U+{code:04X})")
+# Lista completa de caracteres invisíveis/suspeitos fornecidos
+invisible_unicode = [
+    0x00A0, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005,
+    0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202F, 0x205F,
+    0x3000, 0x200B, 0x200C, 0x200D, 0x2060, 0x200E, 0x200F,
+    0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x00AD, 0x034F,
+    0x061C, 0xFE0E, 0xFE0F, 0xFEFF, 0xFFF9, 0xFFFA, 0xFFFB
+] + list(range(0xFE00, 0xFE10))
 
-invisible_set = set(chr(c) for c in invisible_map)
+invisible_set = set(chr(c) for c in invisible_unicode)
 
-# Interface
-st.set_page_config(page_title="Limpador de Caracteres Invisíveis", layout="centered")
-st.title("🧹 Limpador de Caracteres Invisíveis (Unicode)")
+def is_safe_ascii(c):
+    return 32 <= ord(c) <= 126  # ASCII imprimível: espaço até ~
+
+st.set_page_config(page_title="Limpador Seguro ASCII", layout="centered")
+st.title("🛡️ Limpador Total de Caracteres Invisíveis e Não ASCII")
+
 texto = st.text_area("Cole seu texto aqui:", height=300)
 
 if st.button("Limpar texto"):
-    removidos = [c for c in texto if c in invisible_set]
-    texto_limpo = ''.join(c for c in texto if c not in invisible_set)
+    removidos = []
+    texto_limpo = ""
+    for c in texto:
+        if c in invisible_set:
+            removidos.append(ord(c))
+        elif not is_safe_ascii(c):
+            removidos.append(ord(c))
+        else:
+            texto_limpo += c
 
     if removidos:
-        st.success(f"{len(removidos)} caractere(s) invisível(is) foram removidos.")
-        st.markdown("### ✨ Texto limpo")
+        st.success(f"{len(removidos)} caractere(s) invisível(is) ou fora da faixa ASCII foram removidos.")
+        st.markdown("### ✨ Texto limpo (somente ASCII imprimível)")
         st.code(texto_limpo, language="markdown")
 
         # Visualização com destaques
-        st.markdown("### 🔍 Visualização com remoções destacadas")
+        st.markdown("### 🔍 Visualização com removidos destacados")
         destaque = ""
         for c in texto:
-            if c in invisible_set:
-                code = ord(c)
-                destaque += f'<span style="background-color:#FFCDD2;padding:2px;border-radius:4px;margin:1px;" title="{invisible_map[code]}">U+{code:04X}</span>'
+            if c in invisible_set or not is_safe_ascii(c):
+                destaque += f'<span style="background-color:#FFCDD2;padding:2px;margin:1px;border-radius:4px;">U+{ord(c):04X}</span>'
             else:
                 safe = c.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 destaque += safe
         st.markdown(
-            f"<div style='font-family:monospace;line-height:1.6;background:#f9f9f9;border-radius:8px;padding:10px'>{destaque}</div>",
+            f"<div style='font-family:monospace;background:#F9F9F9;border-radius:8px;padding:10px;'>{destaque}</div>",
             unsafe_allow_html=True
         )
     else:
-        st.info("Nenhum caractere invisível foi encontrado.")
+        st.info("Nenhum caractere problemático foi encontrado.")
 
 st.markdown("---")
-st.caption("Ferramenta Synap Digital para limpeza de texto e remoção de caracteres invisíveis.")
+st.caption("Ferramenta Synap Digital para limpeza rigorosa de textos com segurança ASCII.")
