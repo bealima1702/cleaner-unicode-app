@@ -3,7 +3,6 @@ from collections import Counter
 
 # Dicionário expandido com todos os caracteres invisíveis Unicode fornecidos
 invisible_chars = {
-    0x0020: "Space (U+0020)",
     0x00A0: "Non-breaking Space (U+00A0)",
     0x2000: "En Quad (U+2000)",
     0x2001: "Em Quad (U+2001)",
