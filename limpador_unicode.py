@@ -42,7 +42,7 @@ def limpar_texto(texto):
     return resultado, removidos
 
 st.set_page_config(page_title="Limpador Final Unicode", layout="centered")
-st.title("🧹 Limpador de Caracteres (Unicode)")
+st.title("🧹 Limpador de Caracteres Invisíveis (Unicode)")
 
 texto = st.text_area("Cole seu texto aqui:", height=300)
 
